@@ -1,0 +1,89 @@
+/************************************************************************/
+/* This class is wrote for supercomputer to write image use parallel.
+/* Not support Block read & write
+/* But support multi-thread
+/* Author: Y. Yao
+/* E-mail: whuyao@foxmail.com
+/* Version: v1.0
+/************************************************************************/
+
+#ifndef CLASS_GDAL_WRITE
+#define CLASS_GDAL_WRITE
+
+#include "gdal_priv.h"
+#include "ogr_core.h"
+#include "ogr_spatialref.h"
+
+class CGDALRead;
+
+class CGDALWrite
+{
+public:
+	CGDALWrite(void);
+	~CGDALWrite(void);
+
+public:
+	bool init(const char* _filename, int _rows, int _cols, int _bandnum,\
+				double _pGeoTransform[6], const char* _sProjectionRef, \
+				GDALDataType _datatype = GDT_Byte, \
+				double _dInvalidVal = 0.0f);
+
+	bool init(const char* _filename, CGDALRead* pRead);
+
+	bool init(const char* _filename, CGDALRead* pRead, int bandnum, \
+				GDALDataType _datatype = GDT_Byte, \
+				double _dInvalidVal = 0.0f);
+
+	void write(int _row, int _col, int _band, void* pVal);
+
+public:
+	void close();
+
+public:
+	GDALDriver* poDriver();
+	GDALDataset* poDataset();
+	int rows();
+	int cols();
+	int bandnum();
+	long datalength();
+	double invalidValue();
+	unsigned char* imgData();
+	GDALDataType datatype();
+	double* geotransform();
+	char* projectionRef();
+	int perPixelSize();
+
+public:
+	bool world2Pixel(double lat, double lon, double *x, double *y);
+	bool pixel2World(double *lat, double *lon, double x, double y);
+	bool pixel2Ground(double x,double y,double* pX,double* pY);
+	bool ground2Pixel(double X,double Y,double* px,double* py);
+
+protected:
+	template<class TT> bool createData();
+
+protected:
+	GDALDriver* mpoDriver;		//can not release this, maybe cause some memory error!
+	GDALDataset* mpoDataset;	//=>
+	int mnRows;					//
+	int mnCols;					//
+	int mnBands;				//
+	unsigned char* mpData;		//=>
+	GDALDataType mgDataType;	//
+	long mnDatalength;			//=>
+	double mpGeoTransform[6];	//
+	char msProjectionRef[2048];	//
+	char msFilename[2048];		//
+	double mdInvalidValue;		//
+	int mnPerPixSize;			//=>
+
+public:
+	OGRSpatialReferenceH srcSR;
+	OGRSpatialReferenceH latLongSR;
+	OGRCoordinateTransformationH poTransform;	//pixel->world
+	OGRCoordinateTransformationH poTransformT;	//world->pixel
+};
+
+
+
+#endif
